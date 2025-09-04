@@ -66,6 +66,8 @@ def _kwargs_with_environment_defaults(
   if "api_key" not in resolved:
     model_lower = model_id.lower()
     env_vars_by_provider = {
+        "anthropic": ("ANTHROPIC_API_KEY", "LANGEXTRACT_API_KEY"),
+        "claude": ("ANTHROPIC_API_KEY", "LANGEXTRACT_API_KEY"),
         "gemini": ("GEMINI_API_KEY", "LANGEXTRACT_API_KEY"),
         "gpt": ("OPENAI_API_KEY", "LANGEXTRACT_API_KEY"),
     }

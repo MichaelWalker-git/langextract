@@ -31,6 +31,12 @@ OPENAI_PATTERNS = (
 )
 OPENAI_PRIORITY = 10
 
+# Anthropic provider patterns
+ANTHROPIC_PATTERNS = (
+    r'^claude',
+)
+ANTHROPIC_PRIORITY = 10
+
 # Ollama provider patterns
 OLLAMA_PATTERNS = (
     # Standard Ollama naming patterns

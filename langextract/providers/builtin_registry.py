@@ -34,6 +34,11 @@ class ProviderConfig(TypedDict):
 # Built-in provider configurations using centralized patterns
 BUILTIN_PROVIDERS: list[ProviderConfig] = [
     {
+        'patterns': patterns.ANTHROPIC_PATTERNS,
+        'target': 'langextract.providers.anthropic:AnthropicLanguageModel',
+        'priority': patterns.ANTHROPIC_PRIORITY,
+    },
+    {
         'patterns': patterns.GEMINI_PATTERNS,
         'target': 'langextract.providers.gemini:GeminiLanguageModel',
         'priority': patterns.GEMINI_PRIORITY,

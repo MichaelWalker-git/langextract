@@ -47,6 +47,24 @@ class FakeGeminiProvider(base_model.BaseLanguageModel):
     return self.infer(prompts)
 
 
+class FakeAnthropicProvider(base_model.BaseLanguageModel):
+  """Fake Anthropic provider for testing."""
+
+  def __init__(self, model_id, api_key=None, **kwargs):
+    if not api_key:
+      raise ValueError("API key required")
+    self.model_id = model_id
+    self.api_key = api_key
+    self.kwargs = kwargs
+    super().__init__()
+
+  def infer(self, batch_prompts, **kwargs):
+    return [[types.ScoredOutput(score=1.0, output="anthropic")]]
+
+  def infer_batch(self, prompts, batch_size=32):
+    return self.infer(prompts)
+
+
 class FakeOpenAIProvider(base_model.BaseLanguageModel):
   """Fake OpenAI provider for testing."""
 
@@ -74,6 +92,7 @@ class FactoryTest(absltest.TestCase):  # pylint: disable=too-many-public-methods
 
     providers_module._PLUGINS_LOADED = True
     # Use direct registration for test providers to avoid module path issues
+    router.register(r"^claude", priority=100)(FakeAnthropicProvider)
     router.register(r"^gemini", priority=100)(FakeGeminiProvider)
     router.register(r"^gpt", r"^o1", priority=100)(FakeOpenAIProvider)
 
@@ -119,6 +138,14 @@ class FactoryTest(absltest.TestCase):  # pylint: disable=too-many-public-methods
     model = factory.create_model(config)
     self.assertEqual(model.api_key, "env-openai-key")
 
+  @mock.patch.dict(os.environ, {"ANTHROPIC_API_KEY": "env-anthropic-key"})
+  def test_uses_anthropic_api_key_from_environment(self):
+    """Factory should use ANTHROPIC_API_KEY from environment for Anthropic models."""
+    config = factory.ModelConfig(model_id="claude-3-5-sonnet-20241022")
+
+    model = factory.create_model(config)
+    self.assertEqual(model.api_key, "env-anthropic-key")
+
   @mock.patch.dict(
       os.environ, {"LANGEXTRACT_API_KEY": "env-langextract-key"}, clear=True
   )
@@ -128,6 +155,30 @@ class FactoryTest(absltest.TestCase):  # pylint: disable=too-many-public-methods
 
     model = factory.create_model(config)
     self.assertEqual(model.api_key, "env-langextract-key")
+
+  @mock.patch.dict(
+      os.environ, {"LANGEXTRACT_API_KEY": "env-langextract-key"}, clear=True
+  )
+  def test_anthropic_falls_back_to_langextract_api_key_when_provider_key_missing(self):
+    """Factory uses LANGEXTRACT_API_KEY for Anthropic when ANTHROPIC_API_KEY is missing."""
+    config = factory.ModelConfig(model_id="claude-3-5-sonnet-20241022")
+
+    model = factory.create_model(config)
+    self.assertEqual(model.api_key, "env-langextract-key")
+
+  @mock.patch.dict(
+      os.environ,
+      {
+          "ANTHROPIC_API_KEY": "anthropic-key",
+          "LANGEXTRACT_API_KEY": "langextract-key",
+      },
+  )
+  def test_anthropic_specific_key_takes_priority_over_langextract_key(self):
+    """Factory prefers ANTHROPIC_API_KEY over LANGEXTRACT_API_KEY."""
+    config = factory.ModelConfig(model_id="claude-3-5-sonnet-20241022")
+
+    model = factory.create_model(config)
+    self.assertEqual(model.api_key, "anthropic-key")
 
   @mock.patch.dict(
       os.environ,

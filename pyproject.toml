@@ -54,8 +54,9 @@ dependencies = [
 "DOI" = "https://doi.org/10.5281/zenodo.17015089"
 
 [project.optional-dependencies]
+anthropic = ["anthropic>=0.66.0"]
 openai = ["openai>=1.50.0"]
-all = ["openai>=1.50.0"]
+all = ["anthropic>=0.66.0", "openai>=1.50.0"]
 dev = [
     "pyink~=24.3.0",
     "isort>=5.13.0",
@@ -88,6 +89,7 @@ langextract = ["py.typed"]
 
 # Provider discovery mechanism for built-in and third-party providers
 [project.entry-points."langextract.providers"]
+anthropic = "langextract.providers.anthropic:AnthropicLanguageModel"
 gemini = "langextract.providers.gemini:GeminiLanguageModel"
 ollama = "langextract.providers.ollama:OllamaLanguageModel"
 openai = "langextract.providers.openai:OpenAILanguageModel"
